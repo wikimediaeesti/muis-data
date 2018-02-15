@@ -52,10 +52,13 @@ for id in artworkIDs[:1]:
         # TODO: change to add Wikidata P217 property
         identifier = findidentifier(artwork, artworkURI)
         print identifier
-        # TODO: extract author data
-        # TODO: extract technique
-        # TODO: extract material
-        # TODO: extract measurements
+        # TODO: extract author data (P170)
+        # TODO: extract painting date (P571)
+        # TODO: set collection (P195) Tartu Art Museum (Q12376420)
+        # TODO: extract technique (P186)
+        # TODO: extract material (P186)
+        # TODO: extract height (P2048)
+        # TODO: extract width (P2049)
 
     else:
         print "Not a painting"
