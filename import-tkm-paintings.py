@@ -24,13 +24,15 @@ def findidentifier(physical_thing):
     return identifier
 
 
-# TODO: This should allow multiple types (ID 261412)
 def findtechnique(physical_thing):
-    psP2 = physical_thing.find('crm:P2_has_type', physical_thing.nsmap)
-    techniqueSection = psP2.find('muis:Technique', physical_thing.nsmap)
-    technique = techniqueSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
-    techniqueResource = technique.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-    return decodeTechnique(techniqueResource)
+    techniques = []
+    psP2 = physical_thing.findall('crm:P2_has_type', physical_thing.nsmap)
+    for p2 in psP2:
+        techniqueSection = p2.find('muis:Technique', physical_thing.nsmap)
+        technique = techniqueSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
+        techniqueResource = technique.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        techniques.append(decodeTechnique(techniqueResource))
+    return techniques
 
 
 def decodeTechnique(technique):
@@ -48,11 +50,14 @@ def decodeTechnique(technique):
     return switcher.get(technique, "nothing")
 
 def findmaterial(physical_thing):
-    psP2 = physical_thing.find('crm:P45_consists_of', physical_thing.nsmap)
-    materialSection = psP2.find('crm:E57_Material', physical_thing.nsmap)
-    material = materialSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
-    materialResource = material.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-    return decodeMaterial(materialResource)
+    materials = []
+    psP45 = physical_thing.findall('crm:P45_consists_of', physical_thing.nsmap)
+    for p45 in psP45:
+        materialSection = p45.find('crm:E57_Material', physical_thing.nsmap)
+        material = materialSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
+        materialResource = material.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        materials.append(decodeMaterial(materialResource))
+    return materials
 
 
 def decodeMaterial(material):
@@ -114,6 +119,49 @@ def decodeUnit(unit):
     return switcher.get(unit, "nothing")
 
 
+def findcreationevent(physical_thing):
+    eventsXML = physical_thing.findall('crm:P12_occurred_in_the_presence_of', physical_thing.nsmap)
+    for event in eventsXML:
+        # We take the event resource to find more info
+        eventURI = event.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        # We parse the event page
+        eventXML = etree.parse(urllib.urlopen(eventURI))
+        # We find the Event section in it
+        eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
+        # We find the type and extract its URI
+        eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
+        eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175
+        if eventType == 'http://opendata.muis.ee/thesaurus/61/11175':
+            return eventSection
+        else:
+            print "Not a creation event"
+
+
+
+def findauthors(creation_event):
+    authors = []
+    participants = creation_event.findall('crm:P11_had_participant', physical_thing.nsmap)
+    for participant in participants:
+        # We take the "Actor" section
+        participantXML = participant.find('crm:E39_Actor', physical_thing.nsmap)
+        # We extract the type of participant
+        participantTypeXML = participantXML.find('crm:P2_has_type', physical_thing.nsmap)
+        participantType = participantTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        # We check if it's "valmistaja" = "maker" = 58/11400
+        if participantType == 'http://opendata.muis.ee/thesaurus/58/11400':
+            # We find the entry for the author and take its URI
+            authorXML = participantXML.find('owl:sameAs', physical_thing.nsmap)
+            authorURI = authorXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+            authors.append(authorURI)
+    return authors
+
+def findinceptiondate(creation_event):
+    dateString = creation_event.find('dcterms:date', physical_thing.nsmap).text
+    dateList = dateString.split(' - ')
+    inceptiondate = max(dateList)
+    return inceptiondate
+
 site = pywikibot.Site("wikidata", "wikidata")
 repo = site.data_repository()
 
@@ -131,7 +179,8 @@ print artworkIDs
 
 for id in artworkIDs[:1]:
     # We take a painting and take all the info we can find
-    artworkxml = etree.parse(urllib.urlopen("https://www.muis.ee/rdf/object/" + id))
+    #artworkxml = etree.parse(urllib.urlopen("https://www.muis.ee/rdf/object/" + id))
+    artworkxml = etree.parse(urllib.urlopen("https://www.muis.ee/rdf/object/261412"))
     physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.getroot().nsmap)
     if ispainting(physical_thing):
         # TODO: create Wikidata item
@@ -145,22 +194,30 @@ for id in artworkIDs[:1]:
         # TODO: change to add Wikidata P217 property
         identifier = findidentifier(physical_thing)
         print identifier
-        # TODO: extract author data (P170)
-        # TODO: extract painting date (P571)
+        creation_event = findcreationevent(physical_thing)
+        # TODO: change to match and send author data (P170)
+        authors = findauthors(creation_event)
+        for author in authors:
+            print "Author: " + author
+        # TODO: change to send painting date (P571)
+        inception = findinceptiondate(creation_event)
+        print "Date: " + inception
         # TODO: set collection (P195) Tartu Art Museum (Q12376420)
         # TODO: change to send technique (P186)
         composedOf = physical_thing.find('crm:P46_is_composed_of', physical_thing.nsmap)
         second_physical_thing = composedOf.find('crm:E18_Physical_Thing', physical_thing.nsmap)
-        technique = findtechnique(second_physical_thing)
-        print technique
+        techniques = findtechnique(second_physical_thing)
+        for technique in techniques:
+            print "Technique: " + technique
         # TODO: change to send material (P186)
-        material = findmaterial(second_physical_thing)
-        print material
+        materials = findmaterial(second_physical_thing)
+        for material in materials:
+            print "Material: " + material
         # TODO: change to send height (P2048)
         dimensions = finddimensions(second_physical_thing)
-        print dimensions['height'] + " " + dimensions['height-unit']
+        print "Height: " + dimensions['height'] + " " + dimensions['height-unit']
         # TODO: change to send width (P2049)
-        print dimensions['width'] + " " + dimensions['width-unit']
+        print "Width: " + dimensions['width'] + " " + dimensions['width-unit']
 
     else:
         print "Not a painting"
