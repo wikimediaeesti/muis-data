@@ -1,4 +1,4 @@
-import rdflib, urllib
+import rdflib, requests
 import pywikibot
 from lxml import etree
 from pywikibot import pagegenerators as pg
@@ -125,7 +125,7 @@ def findcreationevent(physical_thing):
         # We take the event resource to find more info
         eventURI = event.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
         # We parse the event page
-        eventXML = etree.parse(urllib.urlopen(eventURI))
+        eventXML = etree.fromstring(requests.get(eventURI).content)
         # We find the Event section in it
         eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
         # We find the type and extract its URI
@@ -179,9 +179,8 @@ print artworkIDs
 
 for id in artworkIDs[:1]:
     # We take a painting and take all the info we can find
-    #artworkxml = etree.parse(urllib.urlopen("https://www.muis.ee/rdf/object/" + id))
-    artworkxml = etree.parse(urllib.urlopen("https://www.muis.ee/rdf/object/261412"))
-    physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.getroot().nsmap)
+    artworkxml = etree.fromstring(requests.get("https://www.muis.ee/rdf/object/" + id).content)
+    physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.nsmap)
     if ispainting(physical_thing):
         # TODO: create Wikidata item
         # TODO: change to add Wikidata P4525 property
