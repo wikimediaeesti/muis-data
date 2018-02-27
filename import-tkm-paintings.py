@@ -179,7 +179,10 @@ def findAuthorItems(authorList):
 
 
 def findinceptiondate(creation_event):
-    dateString = creation_event.find('dcterms:date', physical_thing.nsmap).text
+    try:
+        dateString = creation_event.find('dcterms:date', physical_thing.nsmap).text
+    except AttributeError:
+        return None
     dateList = dateString.split(' - ')
     inceptiondate = max(dateList)
     if validateDate(inceptiondate):
