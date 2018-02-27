@@ -88,6 +88,8 @@ def decodeMaterial(material):
         'http://opendata.muis.ee/thesaurus/112/2362': "Q389782",
         # puitkiudplaat
         'http://opendata.muis.ee/thesaurus/112/2410': "Q1397443",
+        # puit = wood
+        'http://opendata.muis.ee/thesaurus/112/2276': "Q287"
 
     }
     return switcher.get(material, None)
@@ -246,7 +248,7 @@ for artworkURI in collection.objects(
     artworkIDs.append(str(artworkURI).rsplit('/', 1)[-1])
 
 # If we want to limit the number: for id in artworkIDs[:n]:
-for id in artworkIDs:
+for id in artworkIDs[:40]:
     # We take a painting and take all the info we can find
     artworkxml = etree.fromstring(requests.get("https://www.muis.ee/rdf/object/" + id).content)
     physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.nsmap)
