@@ -139,16 +139,18 @@ def findcreationevents(physical_thing):
         # We take the event resource to find more info
         eventURI = event.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
         # We parse the event page
-        eventXML = etree.fromstring(requests.get(eventURI).content)
-        # We find the Event section in it
-        eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
-        # We find the type and extract its URI
-        eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
-        eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-        # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
-        if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
-                eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
-            creation_events.append(eventSection)
+        eventRaw = requests.get(eventURI)
+        if eventRaw.ok == True:
+            eventXML = etree.fromstring(eventRaw.content)
+            # We find the Event section in it
+            eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
+            # We find the type and extract its URI
+            eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
+            eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+            # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
+            if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
+                    eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
+                creation_events.append(eventSection)
     return creation_events
 
 
