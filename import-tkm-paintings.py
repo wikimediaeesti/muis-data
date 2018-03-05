@@ -49,7 +49,9 @@ def decodeTechnique(technique):
         # tempera
         'http://opendata.muis.ee/thesaurus/107/5259': "Q175166",
         # guass
-        'http://opendata.muis.ee/thesaurus/107/5539': "Q204330"
+        'http://opendata.muis.ee/thesaurus/107/5539': "Q204330",
+        # akryyl
+        'http://opendata.muis.ee/thesaurus/107/5324': "Q207849"
     }
     return switcher.get(technique, None)
 
@@ -130,7 +132,8 @@ def decodeUnit(unit):
     return switcher.get(unit, "nothing")
 
 
-def findcreationevent(physical_thing):
+def findcreationevents(physical_thing):
+    creation_events = []
     eventsXML = physical_thing.findall('crm:P12_occurred_in_the_presence_of', physical_thing.nsmap)
     for event in eventsXML:
         # We take the event resource to find more info
@@ -145,14 +148,15 @@ def findcreationevent(physical_thing):
         # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
         if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
                 eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
-            return eventSection
-        else:
-            print "Not a creation event"
+            creation_events.append(eventSection)
+    return creation_events
 
 
-def findauthors(creation_event):
+def findauthors(creation_events):
     authors = []
-    participants = creation_event.findall('crm:P11_had_participant', physical_thing.nsmap)
+    participants = []
+    for creation_event in creation_events:
+        participants = list(set().union(participants,creation_event.findall('crm:P11_had_participant', physical_thing.nsmap)))
     for participant in participants:
         # We take the "Actor" section
         participantXML = participant.find('crm:E39_Actor', physical_thing.nsmap)
@@ -165,7 +169,9 @@ def findauthors(creation_event):
             # We find the entry for the author and take its URI
             authorXML = participantXML.find('owl:sameAs', physical_thing.nsmap)
             authorURI = authorXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-            authors.append(str(authorURI).rsplit('/', 1)[-1])
+            authorID = str(authorURI).rsplit('/', 1)[-1]
+            if authorID not in authors:
+                authors.append(authorID)
     authorItems = findAuthorItems(authors)
     return authorItems
 
@@ -180,17 +186,22 @@ def findAuthorItems(authorList):
     return itemList
 
 
-def findinceptiondate(creation_event):
-    try:
-        dateString = creation_event.find('dcterms:date', physical_thing.nsmap).text
-    except AttributeError:
+def findinceptiondate(creation_events):
+    dateString = None
+    for creation_event in creation_events:
+        try:
+            dateString = creation_event.find('dcterms:date', physical_thing.nsmap).text
+        except AttributeError:
+            print "No date string"
+    if dateString is None:
         return None
-    dateList = dateString.split(' - ')
-    inceptiondate = max(dateList)
-    if validateDate(inceptiondate):
-        return inceptiondate
     else:
-        return None
+        dateList = dateString.split(' - ')
+        inceptiondate = max(dateList)
+        if validateDate(inceptiondate):
+            return inceptiondate
+        else:
+            return None
 
 
 def validateDate(date_string):
@@ -248,7 +259,7 @@ for artworkURI in collection.objects(
     artworkIDs.append(str(artworkURI).rsplit('/', 1)[-1])
 
 # If we want to limit the number: for id in artworkIDs[:n]:
-for id in artworkIDs[:40]:
+for id in artworkIDs:
     # We take a painting and take all the info we can find
     artworkxml = etree.fromstring(requests.get("https://www.muis.ee/rdf/object/" + id).content)
     physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.nsmap)
@@ -321,12 +332,12 @@ for id in artworkIDs[:40]:
             inventoryNr.addSources([statedin],
                                    summary="Importing painting data from the Estonian Museum Portal MuIS")
             print "Adding inventory number " + identifier
-        creation_event = findcreationevent(physical_thing)
+        creation_events = findcreationevents(physical_thing)
 
         # We send author data
         # TODO: check author by author and send any that are missing
         if u'P170' not in wdItemClaims:
-            authors = findauthors(creation_event)
+            authors = findauthors(creation_events)
             for author in authors:
                 authorClaim = pywikibot.Claim(repo, "P170")
                 authorQ = pywikibot.ItemPage(repo, author)
@@ -338,7 +349,7 @@ for id in artworkIDs[:40]:
 
         # We send the inception date
         if u'P571' not in wdItemClaims:
-            inception = findinceptiondate(creation_event)
+            inception = findinceptiondate(creation_events)
             if inception is not None:
                 wikiInception = pywikibot.WbTime(year=inception)
                 inceptionClaim = pywikibot.Claim(repo, "P571")
