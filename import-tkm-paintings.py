@@ -349,8 +349,9 @@ for id in artworkIDs:
             # We send author data
             # We check the authors against the existing authors, and add any that are missing
             existingAuthors = []
-            for claim in wdItemClaims[u'P170']:
-                existingAuthors.append(claim.target.getID())
+            if u'P170' in wdItemClaims:
+                for claim in wdItemClaims[u'P170']:
+                    existingAuthors.append(claim.target.getID())
             authors = findauthors(creation_events)
             for author in authors:
                 if author not in existingAuthors:
@@ -383,8 +384,9 @@ for id in artworkIDs:
             # Material and technique in MuIS are both stored as "material used" (P186) in WD
             # We check the materials against the existing materials, and add any that are missing
             existingMaterials = []
-            for claim in wdItemClaims[u'P186']:
-                existingMaterials.append(claim.target.getID())
+            if u'P186' in wdItemClaims:
+                for claim in wdItemClaims[u'P186']:
+                    existingMaterials.append(claim.target.getID())
             techniques = findtechnique(second_physical_thing)
             materials = findmaterial(second_physical_thing)
             wdMaterials = list(set().union(techniques, materials))
