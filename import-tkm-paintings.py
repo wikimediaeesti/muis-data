@@ -7,9 +7,12 @@ from pywikibot import pagegenerators as pg
 # Checks whether the entry for the artwork specifies it is a painting
 def ispainting(physical_thing):
     typeXML = physical_thing.find('crm:P2_has_type', physical_thing.nsmap)
-    type = typeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-    if type == 'http://opendata.muis.ee/thesaurus/203/13540':
-        return True
+    if typeXML is not None:
+        type = typeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        if type == 'http://opendata.muis.ee/thesaurus/203/13540':
+            return True
+        else:
+            return False
     else:
         return False
 
@@ -73,25 +76,27 @@ def findmaterial(physical_thing):
 
 def decodeMaterial(material):
     switcher = {
-        # l6uend
+        # vineer = plywood
         'http://opendata.muis.ee/thesaurus/112/32314': "Q219803",
-        # vineer
+        'http://opendata.muis.ee/thesaurus/112/2461': "Q219803",
+        # l6uend = canvas
         'http://opendata.muis.ee/thesaurus/112/2345': "Q12321255",
-        'http://opendata.muis.ee/thesaurus/112/2461': "Q12321255",
-        # metall
+        # metall = metal
         'http://opendata.muis.ee/thesaurus/112/2139': "Q11426",
-        # paber
+        # paber = paper
         'http://opendata.muis.ee/thesaurus/112/2195': "Q11472",
-        # masoniit
+        'https://www.muis.ee/rdf/thesaurus/112/32512': "Q11472",
+        # masoniit = masonite
         'http://opendata.muis.ee/thesaurus/112/29672': "Q1808397",
         # kartong = cardboard
         'http://opendata.muis.ee/thesaurus/112/2203': "Q389782",
         # papp = cardboard
         'http://opendata.muis.ee/thesaurus/112/2362': "Q389782",
-        # puitkiudplaat
+        # puitkiudplaat = fiberboard
         'http://opendata.muis.ee/thesaurus/112/2410': "Q1397443",
         # puit = wood
-        'http://opendata.muis.ee/thesaurus/112/2276': "Q287"
+        'http://opendata.muis.ee/thesaurus/112/2276': "Q287",
+        'http://opendata.muis.ee/thesaurus/112/32303': "Q287"
 
     }
     return switcher.get(material, None)
