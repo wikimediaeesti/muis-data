@@ -27,6 +27,20 @@ def findidentifier(physical_thing):
     return identifier
 
 
+def findOwner(physical_thing):
+    psP52 = physical_thing.find('crm:P52_has_current_owner', physical_thing.nsmap)
+    ownerResource = psP52.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+    return decodeOwner(ownerResource)
+
+
+def decodeOwner(owner):
+    switcher = {
+        # Tartu Kunstimuusem
+        'http://opendata.muis.ee/person-group/42620': "Q12376420"
+    }
+    return switcher.get(owner, None)
+
+
 def findtechnique(physical_thing):
     techniques = []
     psP2 = physical_thing.findall('crm:P2_has_type', physical_thing.nsmap)
@@ -330,6 +344,18 @@ for id in artworkIDs:
                 collectionClaim.addSources([statedin],
                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                 print "Adding collection Tartu Art Museum"
+
+            # We set the owner to Tartu Art Museum when appropriate
+            if u'P127' not in wdItemClaims:
+                owner = findOwner(physical_thing)
+                if owner is not None:
+                    ownerClaim = pywikibot.Claim(repo, "P127")
+                    ownerQ = pywikibot.ItemPage(repo, owner)
+                    ownerClaim.setTarget(ownerQ)
+                    wdItem.addClaim(ownerClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
+                    ownerClaim.addSources([statedin],
+                                       summary="Importing painting data from the Estonian Museum Portal MuIS")
+                    print "Adding owner: " + owner
 
             # We find the inventory number and send it to WD
             if u'P217' not in wdItemClaims:
