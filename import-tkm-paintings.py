@@ -158,18 +158,21 @@ def findcreationevents(physical_thing):
         # We take the event resource to find more info
         eventURI = event.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
         # We parse the event page
-        eventRaw = requests.get(eventURI)
-        if eventRaw.ok == True:
-            eventXML = etree.fromstring(eventRaw.content)
-            # We find the Event section in it
-            eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
-            # We find the type and extract its URI
-            eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
-            eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-            # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
-            if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
-                    eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
-                creation_events.append(eventSection)
+        try:
+            eventRaw = requests.get(eventURI)
+            if eventRaw.ok == True:
+                eventXML = etree.fromstring(eventRaw.content)
+                # We find the Event section in it
+                eventSection = eventXML.find('crm:E5_Event', physical_thing.nsmap)
+                # We find the type and extract its URI
+                eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
+                eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+                # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
+                if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
+                        eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
+                    creation_events.append(eventSection)
+        except requests.exceptions.RequestException as e:
+            print e
     return creation_events
 
 
@@ -262,8 +265,7 @@ repo = site.data_repository()
 
 # We take the IDs for all TKM paintings already in WD
 existingIDs = findExistingItems()
-
-print existingIDs
+print "Found " + str(len(existingIDs)) + " existing items"
 
 # We create a general "stated in" claim for MuIS to reuse every time
 statedin = pywikibot.Claim(repo, "P248")
@@ -283,6 +285,7 @@ for artworkURI in collection.objects(
 
 # We want to know how far we are
 numberOfIds = len(artworkIDs)
+print "Found a total of " + str(numberOfIds) + " items"
 currentNumber = 0
 
 # If we want to limit the number: for id in artworkIDs[:n]:
