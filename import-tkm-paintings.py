@@ -235,11 +235,12 @@ def validateDate(date_string):
 
 def findExistingItems():
     existingIDs = []
-    query = u'SELECT ?item ?id WHERE { ?item wdt:P195 wd:Q12376420 . ?item wdt:P4525 ?id }'
-    generator = pg.WikidataSPARQLPageGenerator(query, site=site)
-    for item in generator:
-        itemData = item.get()
-        existingIDs.append(itemData['claims'][u'P4525'][0].target)
+    print "Querying for existing items"
+    query = u'SELECT ?id WHERE { ?item wdt:P195 wd:Q12376420 . ?item wdt:P4525 ?id }'
+    response = requests.get("https://query.wikidata.org/bigdata/namespace/wdq/sparql", params={'query': query, 'format': 'json'}).json()
+    results = response[u'results'][u'bindings']
+    for result in results:
+        existingIDs.append(str(result[u'id'][u'value']))
     return existingIDs
 
 
@@ -275,14 +276,20 @@ collection.parse("https://www.muis.ee/rdf/collection/442")
 
 artworkIDs = []
 
+print "Finding all IDs in collection"
 for artworkURI in collection.objects(
         predicate=rdflib.term.URIRef(u'http://www.cidoc-crm.org/cidoc-crm/P46_is_composed_of')):
     artworkIDs.append(str(artworkURI).rsplit('/', 1)[-1])
 
+# We want to know how far we are
+numberOfIds = len(artworkIDs)
+currentNumber = 0
+
 # If we want to limit the number: for id in artworkIDs[:n]:
 for id in artworkIDs:
+    currentNumber += 1
     # We take a painting and take all the info we can find
-    print "Working with id: " + id
+    print "Working with id: " + id + " (" + str(currentNumber) + "/" + str(numberOfIds) + ")"
     artworkraw = requests.get("https://www.muis.ee/rdf/object/" + id)
     if artworkraw.status_code == 404:
         print "Couldn't find item"
