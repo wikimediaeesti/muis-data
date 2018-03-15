@@ -68,7 +68,8 @@ def decodeTechnique(technique):
         # guass
         'http://opendata.muis.ee/thesaurus/107/5539': "Q204330",
         # akryyl
-        'http://opendata.muis.ee/thesaurus/107/5324': "Q207849"
+        'http://opendata.muis.ee/thesaurus/107/5324': "Q207849",
+        'http://opendata.muis.ee/thesaurus/107/33127': "Q207849"
     }
     return switcher.get(technique, None)
 
