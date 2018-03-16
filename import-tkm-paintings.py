@@ -69,7 +69,9 @@ def decodeTechnique(technique):
         'http://opendata.muis.ee/thesaurus/107/5539': "Q204330",
         # akryyl
         'http://opendata.muis.ee/thesaurus/107/5324': "Q207849",
-        'http://opendata.muis.ee/thesaurus/107/33127': "Q207849"
+        'http://opendata.muis.ee/thesaurus/107/33127': "Q207849",
+        # akvarell
+        'https://www.muis.ee/rdf/thesaurus/107/5325': "Q22915256"
     }
     return switcher.get(technique, None)
 
