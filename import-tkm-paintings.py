@@ -71,7 +71,7 @@ def decodeTechnique(technique):
         'http://opendata.muis.ee/thesaurus/107/5324': "Q207849",
         'http://opendata.muis.ee/thesaurus/107/33127': "Q207849",
         # akvarell
-        'https://www.muis.ee/rdf/thesaurus/107/5325': "Q22915256"
+        'http://opendata.muis.ee/thesaurus/107/5325': "Q22915256"
     }
     return switcher.get(technique, None)
 
@@ -98,11 +98,12 @@ def decodeMaterial(material):
         'http://opendata.muis.ee/thesaurus/112/2461': "Q219803",
         # l6uend = canvas
         'http://opendata.muis.ee/thesaurus/112/2345': "Q12321255",
+        'http://opendata.muis.ee/thesaurus/112/32493': "Q12321255",
         # metall = metal
         'http://opendata.muis.ee/thesaurus/112/2139': "Q11426",
         # paber = paper
         'http://opendata.muis.ee/thesaurus/112/2195': "Q11472",
-        'https://www.muis.ee/rdf/thesaurus/112/32512': "Q11472",
+        'http://opendata.muis.ee/thesaurus/112/32512': "Q11472",
         # masoniit = masonite
         'http://opendata.muis.ee/thesaurus/112/29672': "Q1808397",
         # kartong = cardboard
