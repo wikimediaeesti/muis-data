@@ -58,11 +58,12 @@ def findtechnique(physical_thing):
 
 def decodeTechnique(technique):
     switcher = {
-        # 6li
+        # 6li = oil
         'http://opendata.muis.ee/thesaurus/107/5329': "Q296955",
         'http://opendata.muis.ee/thesaurus/107/33126': "Q296955",
         # segatehnika = "mixed technique" doesn't seem to be a good match for WD "material"
         'http://opendata.muis.ee/thesaurus/107/5328': None,
+        'http://opendata.muis.ee/thesaurus/107/32869': None,
         # tempera
         'http://opendata.muis.ee/thesaurus/107/5259': "Q175166",
         # guass
@@ -71,7 +72,45 @@ def decodeTechnique(technique):
         'http://opendata.muis.ee/thesaurus/107/5324': "Q207849",
         'http://opendata.muis.ee/thesaurus/107/33127': "Q207849",
         # akvarell
-        'http://opendata.muis.ee/thesaurus/107/5325': "Q22915256"
+        'http://opendata.muis.ee/thesaurus/107/5325': "Q22915256",
+        # lehtkuldamine = gilding = material is gold leaf
+        'http://opendata.muis.ee/thesaurus/107/5666': "Q929186",
+        # kuldamine = gilding = material is gold leaf
+        'http://opendata.muis.ee/thesaurus/107/5664': "Q929186",
+        # maalimine = painting = not detailed enough to send anything
+        'http://opendata.muis.ee/thesaurus/107/5573': None,
+        # lakkmaal = lacquer painting = lacquer
+        'http://opendata.muis.ee/thesaurus/107/5542': "Q11236878",
+        # tushshimaal = India ink painting = India ink
+        'http://opendata.muis.ee/thesaurus/107/5541': "Q12981547",
+        'http://opendata.muis.ee/thesaurus/107/5278': "Q12981547",
+        # emailmaal/emailimine = enamel painting = enamel
+        'http://opendata.muis.ee/thesaurus/107/5538': "Q2386424",
+        'http://opendata.muis.ee/thesaurus/107/5283': "Q2386424",
+        # aerograafia = airbrushing, not sure what material
+        'http://opendata.muis.ee/thesaurus/107/5477': None,
+        # kruntimine = ???
+        'http://opendata.muis.ee/thesaurus/107/5457': None,
+        # transparentmaal (liimv2rvi- ehk dekoratsioonimaal) = liimv2rv (not sure of English term?)
+        'http://opendata.muis.ee/thesaurus/107/5441': "Q50825569",
+        # grafiit = graphite
+        'http://opendata.muis.ee/thesaurus/107/5424': "Q5309",
+        # kollaazh = collage = not a material as such I guess?
+        'http://opendata.muis.ee/thesaurus/107/5344': None,
+        # assamblaazh = similar to collage above
+        'http://opendata.muis.ee/thesaurus/107/29675': None,
+        'http://opendata.muis.ee/thesaurus/107/23637': None,
+        # pliiats = pencil
+        'http://opendata.muis.ee/thesaurus/107/5276': "Q14674",
+        # 6lipastell = oil pastel
+        'http://opendata.muis.ee/thesaurus/107/5257': "Q297081",
+        # monotyypia = monotype = not a material?
+        'http://opendata.muis.ee/thesaurus/107/5256': None,
+        'http://opendata.muis.ee/thesaurus/107/33075': None,
+        # viltpliiats = marker
+        'http://opendata.muis.ee/thesaurus/107/30014': "Q493615",
+        # pastell = pastel
+        'http://opendata.muis.ee/thesaurus/107/29685': "Q189085"
     }
     return switcher.get(technique, None)
 
@@ -110,12 +149,36 @@ def decodeMaterial(material):
         'http://opendata.muis.ee/thesaurus/112/2203': "Q389782",
         # papp = cardboard
         'http://opendata.muis.ee/thesaurus/112/2362': "Q389782",
+        'http://opendata.muis.ee/thesaurus/112/32528': "Q389782",
         # puitkiudplaat = fiberboard
         'http://opendata.muis.ee/thesaurus/112/2410': "Q1397443",
         # puit = wood
         'http://opendata.muis.ee/thesaurus/112/2276': "Q287",
-        'http://opendata.muis.ee/thesaurus/112/32303': "Q287"
-
+        'http://opendata.muis.ee/thesaurus/112/32303': "Q287",
+        # lateks = latex
+        'http://opendata.muis.ee/thesaurus/112/2072': "Q244680",
+        # 6li = oil
+        'http://opendata.muis.ee/thesaurus/112/2076': "Q296955",
+        # <anorgaanilise/orgaanilise aine kombinatsioonid> doesn't fit anything really
+        'http://opendata.muis.ee/thesaurus/112/2086': None,
+        # klaas = glass
+        'http://opendata.muis.ee/thesaurus/112/2138': "Q11469",
+        # tekstiil = textile
+        'http://opendata.muis.ee/thesaurus/112/2209': "Q28823",
+        # purjeriie has an unclear WD matching
+        'http://opendata.muis.ee/thesaurus/112/2232': None,
+        # p2rlmutter = nacre
+        'http://opendata.muis.ee/thesaurus/112/2366': "Q215865",
+        # pleksiklaas = plexiglas = Polymethyl methacrylate
+        'http://opendata.muis.ee/thesaurus/112/2374': "Q146123",
+        # tempera
+        'http://opendata.muis.ee/thesaurus/112/2445': "Q175166",
+        # lainepapp = corrugated fiberboard
+        'http://opendata.muis.ee/thesaurus/112/2462': "Q7463524",
+        # penoplast = vahtpolystyreen = extruded polystyrene
+        'http://opendata.muis.ee/thesaurus/112/30155': "Q46998058",
+        # kips = gypsum = gypsum plaster
+        'http://opendata.muis.ee/thesaurus/112/32615': "Q25816410"
     }
     return switcher.get(material, None)
 
