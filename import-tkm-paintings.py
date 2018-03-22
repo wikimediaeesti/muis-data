@@ -234,9 +234,9 @@ def findcreationevents(physical_thing):
                 # We find the type and extract its URI
                 eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
                 eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-                # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273
-                if (eventType == 'http://opendata.muis.ee/thesaurus/61/11175') or (
-                        eventType == 'http://opendata.muis.ee/thesaurus/61/11273'):
+                # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273 or "valmistamine/tekkimine" = 61/11145
+                acceptable_types = ['http://opendata.muis.ee/thesaurus/61/11175', 'http://opendata.muis.ee/thesaurus/61/11273', 'https://www.muis.ee/rdf/thesaurus/61/11145']
+                if eventType in acceptable_types:
                     creation_events.append(eventSection)
         except requests.exceptions.RequestException as e:
             print e
