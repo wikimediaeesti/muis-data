@@ -5,16 +5,20 @@ from pywikibot import pagegenerators as pg
 
 
 # Checks whether the entry for the artwork specifies it is a painting
-def ispainting(physical_thing):
+def findPaintingType(physical_thing):
     typeXML = physical_thing.find('crm:P2_has_type', physical_thing.nsmap)
     if typeXML is not None:
         type = typeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
         if type == 'http://opendata.muis.ee/thesaurus/203/13540':
-            return True
+            # painting
+            return "Q3305213"
+        elif type == 'http://opendata.muis.ee/thesaurus/203/28549':
+            # watercolor
+            return "Q18761202"
         else:
-            return False
+            return None
     else:
-        return False
+        return None
 
 
 def findlabel(physical_thing):
@@ -235,7 +239,9 @@ def findcreationevents(physical_thing):
                 eventTypeXML = eventSection.find('crm:P2_has_type', physical_thing.nsmap)
                 eventType = eventTypeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
                 # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273 or "valmistamine/tekkimine" = 61/11145
-                acceptable_types = ['http://opendata.muis.ee/thesaurus/61/11175', 'http://opendata.muis.ee/thesaurus/61/11273', 'https://www.muis.ee/rdf/thesaurus/61/11145']
+                acceptable_types = ['http://opendata.muis.ee/thesaurus/61/11175',
+                                    'http://opendata.muis.ee/thesaurus/61/11273',
+                                    'https://www.muis.ee/rdf/thesaurus/61/11145']
                 if eventType in acceptable_types:
                     creation_events.append(eventSection)
         except requests.exceptions.RequestException as e:
@@ -247,7 +253,8 @@ def findauthors(creation_events):
     authors = []
     participants = []
     for creation_event in creation_events:
-        participants = list(set().union(participants,creation_event.findall('crm:P11_had_participant', physical_thing.nsmap)))
+        participants = list(
+            set().union(participants, creation_event.findall('crm:P11_had_participant', physical_thing.nsmap)))
     for participant in participants:
         # We take the "Actor" section
         participantXML = participant.find('crm:E39_Actor', physical_thing.nsmap)
@@ -307,7 +314,8 @@ def findExistingItems():
     existingIDs = []
     print "Querying for existing items"
     query = u'SELECT ?id WHERE { ?item wdt:P195 wd:Q12376420 . ?item wdt:P4525 ?id }'
-    response = requests.get("https://query.wikidata.org/bigdata/namespace/wdq/sparql", params={'query': query, 'format': 'json'}).json()
+    response = requests.get("https://query.wikidata.org/bigdata/namespace/wdq/sparql",
+                            params={'query': query, 'format': 'json'}).json()
     results = response[u'results'][u'bindings']
     for result in results:
         existingIDs.append(str(result[u'id'][u'value']))
@@ -327,6 +335,14 @@ def getItemByMuisID(id):
         return item
 
 
+def extractCollectionIds(collection):
+    artworkIDs = []
+    for artworkURI in collection.objects(
+            predicate=rdflib.term.URIRef(u'http://www.cidoc-crm.org/cidoc-crm/P46_is_composed_of')):
+        artworkIDs.append(str(artworkURI).rsplit('/', 1)[-1])
+    return artworkIDs
+
+
 site = pywikibot.Site("wikidata", "wikidata")
 repo = site.data_repository()
 
@@ -339,16 +355,17 @@ statedin = pywikibot.Claim(repo, "P248")
 muis = pywikibot.ItemPage(repo, "Q50211618")
 statedin.setTarget(muis)
 
-# We take the painting collection from Tartu Art Museum and extract the IDs of all the artworks in it
-collection = rdflib.Graph()
-collection.parse("https://www.muis.ee/rdf/collection/442")
+# We take the painting collections from Tartu Art Museum and extract the IDs of all the artworks in them
+print "Finding all IDs in collection"
+paintingCollection = rdflib.Graph()
+paintingCollection.parse("https://www.muis.ee/rdf/collection/442")
+watercolorCollection = rdflib.Graph()
+watercolorCollection.parse("https://www.muis.ee/rdf/collection/419")
 
 artworkIDs = []
 
-print "Finding all IDs in collection"
-for artworkURI in collection.objects(
-        predicate=rdflib.term.URIRef(u'http://www.cidoc-crm.org/cidoc-crm/P46_is_composed_of')):
-    artworkIDs.append(str(artworkURI).rsplit('/', 1)[-1])
+artworkIDs.extend(extractCollectionIds(paintingCollection))
+artworkIDs.extend(extractCollectionIds(watercolorCollection))
 
 # We want to know how far we are
 numberOfIds = len(artworkIDs)
@@ -356,7 +373,7 @@ print "Found a total of " + str(numberOfIds) + " items"
 currentNumber = 0
 
 # If we want to limit the number: for id in artworkIDs[:n]:
-for id in artworkIDs:
+for id in existingIDs:
     currentNumber += 1
     # We take a painting and take all the info we can find
     print "Working with id: " + id + " (" + str(currentNumber) + "/" + str(numberOfIds) + ")"
@@ -367,8 +384,9 @@ for id in artworkIDs:
         artworkxml = etree.fromstring(artworkraw.content)
         physical_thing = artworkxml.find('crm:E18_Physical_Thing', artworkxml.nsmap)
         wdItem = None
+        paintingType = findPaintingType(physical_thing)
         # If it's a painting, we want to add data!
-        if ispainting(physical_thing):
+        if paintingType is not None:
 
             # If the painting is not in WD yet, we create an item
             if not id in existingIDs:
@@ -403,7 +421,7 @@ for id in artworkIDs:
             # We add the claim the item is an instance of painting
             if u'P31' not in wdItemClaims:
                 instanceOf = pywikibot.Claim(repo, "P31")
-                paintingQ = pywikibot.ItemPage(repo, "Q3305213")
+                paintingQ = pywikibot.ItemPage(repo, paintingType)
                 instanceOf.setTarget(paintingQ)
                 wdItem.addClaim(instanceOf, summary="Importing painting data from the Estonian Museum Portal MuIS")
                 instanceOf.addSources([statedin],
@@ -431,7 +449,7 @@ for id in artworkIDs:
                     ownerClaim.setTarget(ownerQ)
                     wdItem.addClaim(ownerClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
                     ownerClaim.addSources([statedin],
-                                       summary="Importing painting data from the Estonian Museum Portal MuIS")
+                                          summary="Importing painting data from the Estonian Museum Portal MuIS")
                     print "Adding owner: " + owner
 
             # We find the inventory number and send it to WD
@@ -473,7 +491,8 @@ for id in artworkIDs:
                     wikiInception = pywikibot.WbTime(year=inception)
                     inceptionClaim = pywikibot.Claim(repo, "P571")
                     inceptionClaim.setTarget(wikiInception)
-                    wdItem.addClaim(inceptionClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
+                    wdItem.addClaim(inceptionClaim,
+                                    summary="Importing painting data from the Estonian Museum Portal MuIS")
                     inceptionClaim.addSources([statedin],
                                               summary="Importing painting data from the Estonian Museum Portal MuIS")
                     print "Adding inception date: " + inception
@@ -500,7 +519,8 @@ for id in artworkIDs:
                             materialClaim = pywikibot.Claim(repo, "P186")
                             wdMaterialQ = pywikibot.ItemPage(repo, wdMaterial)
                             materialClaim.setTarget(wdMaterialQ)
-                            wdItem.addClaim(materialClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
+                            wdItem.addClaim(materialClaim,
+                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                             materialClaim.addSources([statedin],
                                                      summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print "Adding technique / material: " + wdMaterial
@@ -509,25 +529,29 @@ for id in artworkIDs:
                     dimensions = finddimensions(second_physical_thing)
                     if dimensions is not None:
                         # We submit the height. Currently, we do it only if it's a unit in cm
-                        if u'P2048' not in wdItemClaims and dimensions['height-unit'] == "http://www.wikidata.org/entity/Q174728":
+                        if u'P2048' not in wdItemClaims and dimensions[
+                            'height-unit'] == "http://www.wikidata.org/entity/Q174728":
                             heightClaim = pywikibot.Claim(repo, "P2048")
                             height = pywikibot.WbQuantity(amount=dimensions['height'],
                                                           unit=dimensions['height-unit'],
                                                           site=repo)
                             heightClaim.setTarget(height)
-                            wdItem.addClaim(heightClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
+                            wdItem.addClaim(heightClaim,
+                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                             heightClaim.addSources([statedin],
                                                    summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print "Adding height: " + dimensions['height'] + " cm"
 
                         # We submit the width. Currently, we do it only if it's a unit in cm
-                        if u'P2049' not in wdItemClaims and dimensions['width-unit'] == "http://www.wikidata.org/entity/Q174728":
+                        if u'P2049' not in wdItemClaims and dimensions[
+                            'width-unit'] == "http://www.wikidata.org/entity/Q174728":
                             widthClaim = pywikibot.Claim(repo, "P2049")
                             width = pywikibot.WbQuantity(amount=dimensions['width'],
                                                          unit=dimensions['width-unit'],
                                                          site=repo)
                             widthClaim.setTarget(width)
-                            wdItem.addClaim(widthClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
+                            wdItem.addClaim(widthClaim,
+                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                             widthClaim.addSources([statedin],
                                                   summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print "Adding width: " + dimensions['width'] + " cm"
