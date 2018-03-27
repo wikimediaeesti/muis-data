@@ -50,13 +50,14 @@ def findtechnique(physical_thing):
     psP2 = physical_thing.findall('crm:P2_has_type', physical_thing.nsmap)
     for p2 in psP2:
         techniqueSection = p2.find('muis:Technique', physical_thing.nsmap)
-        technique = techniqueSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
-        techniqueResource = technique.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-        techniqueWDItem = decodeTechnique(techniqueResource)
-        if techniqueWDItem is not None:
-            techniques.append(techniqueWDItem)
-        else:
-            print "Technique not found: " + techniqueResource
+        if techniqueSection is not None:
+            technique = techniqueSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
+            techniqueResource = technique.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+            techniqueWDItem = decodeTechnique(techniqueResource)
+            if techniqueWDItem is not None:
+                techniques.append(techniqueWDItem)
+            else:
+                print "Technique not found: " + techniqueResource
     return techniques
 
 
@@ -77,6 +78,7 @@ def decodeTechnique(technique):
         'http://opendata.muis.ee/thesaurus/107/33127': "Q207849",
         # akvarell
         'http://opendata.muis.ee/thesaurus/107/5325': "Q22915256",
+        'http://opendata.muis.ee/thesaurus/107/33122': "Q22915256",
         # lehtkuldamine = gilding = material is gold leaf
         'http://opendata.muis.ee/thesaurus/107/5666': "Q929186",
         # kuldamine = gilding = material is gold leaf
@@ -114,7 +116,13 @@ def decodeTechnique(technique):
         # viltpliiats = marker
         'http://opendata.muis.ee/thesaurus/107/30014': "Q493615",
         # pastell = pastel
-        'http://opendata.muis.ee/thesaurus/107/29685': "Q189085"
+        'http://opendata.muis.ee/thesaurus/107/29685': "Q189085",
+        # v2rviline pliiats = colored pencil
+        'http://opendata.muis.ee/thesaurus/107/26072': "Q1783255",
+        # v2rvipliiatsijoonistus = colored pencil drawing = colored pencil
+        'http://opendata.muis.ee/thesaurus/107/5277': "Q1783255",
+        # sysi = charcoal
+        'http://opendata.muis.ee/thesaurus/107/5450': "Q1424515"
     }
     return switcher.get(technique, None)
 
@@ -124,13 +132,14 @@ def findmaterial(physical_thing):
     psP45 = physical_thing.findall('crm:P45_consists_of', physical_thing.nsmap)
     for p45 in psP45:
         materialSection = p45.find('crm:E57_Material', physical_thing.nsmap)
-        material = materialSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
-        materialResource = material.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-        materialWDItem = decodeMaterial(materialResource)
-        if materialWDItem is not None:
-            materials.append(materialWDItem)
-        else:
-            print "Material not found: " + materialResource
+        if materialSection is not None:
+            material = materialSection.find('crm:P130_shows_features_of', physical_thing.nsmap)
+            materialResource = material.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+            materialWDItem = decodeMaterial(materialResource)
+            if materialWDItem is not None:
+                materials.append(materialWDItem)
+            else:
+                print "Material not found: " + materialResource
     return materials
 
 
@@ -373,7 +382,7 @@ print "Found a total of " + str(numberOfIds) + " items"
 currentNumber = 0
 
 # If we want to limit the number: for id in artworkIDs[:n]:
-for id in existingIDs:
+for id in artworkIDs:
     currentNumber += 1
     # We take a painting and take all the info we can find
     print "Working with id: " + id + " (" + str(currentNumber) + "/" + str(numberOfIds) + ")"
