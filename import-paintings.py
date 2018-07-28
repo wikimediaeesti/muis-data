@@ -372,11 +372,15 @@ print("Found " + str(len(existingIDs)) + " existing items")
 statedin = pywikibot.Claim(repo, "P248")
 muis = pywikibot.ItemPage(repo, "Q50211618")
 statedin.setTarget(muis)
+refdate = pywikibot.Claim(repo, "P813")
+today = datetime.datetime.today()
+date = pywikibot.WbTime(year=today.year, month=today.month, day=today.day)
+refdate.setTarget(date)
 
 # We take the desired painting collections and extract the IDs of all the artworks in them
 print("Finding all IDs in collections")
 # 149 = Estonian Art Museum foreign paintings, 289 = EAM paintings, 402 = EAM Eric-Adamson collection
-collectionIDs = ["149", "289", "402"]
+collectionIDs = ["289"]#"149", "289", "402"]
 # 419 = Tartu Art Museum watercolors, 442 = TAM paintings
 #collectionIDs = ["419", "442"]
 
@@ -395,6 +399,9 @@ currentNumber = 0
 # If we want to limit the number: for id in artworkIDs[:n]:
 for id in artworkIDs:
     currentNumber += 1
+    # We prepare a link to the MuIS ID to use in reference sections
+    muisidref = pywikibot.Claim(repo, "P4525")
+    muisidref.setTarget(id)
     # We take a painting and take all the info we can find
     print("Working with id: " + id + " (" + str(currentNumber) + "/" + str(numberOfIds) + ")")
     artworkraw = requests.get("https://www.muis.ee/rdf/object/" + id)
@@ -422,7 +429,7 @@ for id in artworkIDs:
                 muisID = pywikibot.Claim(repo, "P4525")
                 muisID.setTarget(id)
                 wdItem.addClaim(muisID, summary="Importing painting data from the Estonian Museum Portal MuIS")
-                muisID.addSources([statedin],
+                muisID.addSources([statedin, muisidref, refdate],
                                   summary="Importing painting data from the Estonian Museum Portal MuIS")
                 print("Adding MuIS ID " + id)
                 # We add it to existingIDs to make sure we don't create it again somehow
@@ -444,7 +451,7 @@ for id in artworkIDs:
                 paintingQ = pywikibot.ItemPage(repo, paintingType)
                 instanceOf.setTarget(paintingQ)
                 wdItem.addClaim(instanceOf, summary="Importing painting data from the Estonian Museum Portal MuIS")
-                instanceOf.addSources([statedin],
+                instanceOf.addSources([statedin, muisidref, refdate],
                                       summary="Importing painting data from the Estonian Museum Portal MuIS")
                 print("Adding instance of painting")
 
@@ -457,7 +464,7 @@ for id in artworkIDs:
                     collectionClaim = pywikibot.Claim(repo, "P195")
                     collectionClaim.setTarget(ownerQ)
                     wdItem.addClaim(collectionClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    collectionClaim.addSources([statedin],
+                    collectionClaim.addSources([statedin, muisidref, refdate],
                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                     print("Adding collection: " + owner)
 
@@ -467,7 +474,7 @@ for id in artworkIDs:
                     ownerClaim = pywikibot.Claim(repo, "P127")
                     ownerClaim.setTarget(ownerQ)
                     wdItem.addClaim(ownerClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    ownerClaim.addSources([statedin],
+                    ownerClaim.addSources([statedin, muisidref, refdate],
                                           summary="Importing painting data from the Estonian Museum Portal MuIS")
                     print("Adding owner: " + owner)
 
@@ -482,7 +489,7 @@ for id in artworkIDs:
                     qualifier.setTarget(ownerQ)
                     inventoryNr.addQualifier(qualifier,
                                          summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    inventoryNr.addSources([statedin],
+                    inventoryNr.addSources([statedin, muisidref, refdate],
                                        summary="Importing painting data from the Estonian Museum Portal MuIS")
                 print("Adding inventory number " + identifier)
             creation_events = findcreationevents(physical_thing)
@@ -500,7 +507,7 @@ for id in artworkIDs:
                     authorQ = pywikibot.ItemPage(repo, author)
                     authorClaim.setTarget(authorQ)
                     wdItem.addClaim(authorClaim, summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    authorClaim.addSources([statedin],
+                    authorClaim.addSources([statedin, muisidref, refdate],
                                            summary="Importing painting data from the Estonian Museum Portal MuIS")
                     print("Adding author: " + author)
 
@@ -513,7 +520,7 @@ for id in artworkIDs:
             #         inceptionClaim.setTarget(wikiInception)
             #         wdItem.addClaim(inceptionClaim,
             #                         summary="Importing painting data from the Estonian Museum Portal MuIS")
-            #         inceptionClaim.addSources([statedin],
+            #         inceptionClaim.addSources([statedin, muisidref, refdate],
             #                                   summary="Importing painting data from the Estonian Museum Portal MuIS")
             #         print("Adding inception date: " + inception)
             #     else:
@@ -541,7 +548,7 @@ for id in artworkIDs:
                             materialClaim.setTarget(wdMaterialQ)
                             wdItem.addClaim(materialClaim,
                                             summary="Importing painting data from the Estonian Museum Portal MuIS")
-                            materialClaim.addSources([statedin],
+                            materialClaim.addSources([statedin, muisidref, refdate],
                                                      summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print("Adding technique / material: " + wdMaterial)
 
@@ -558,7 +565,7 @@ for id in artworkIDs:
                             heightClaim.setTarget(height)
                             wdItem.addClaim(heightClaim,
                                             summary="Importing painting data from the Estonian Museum Portal MuIS")
-                            heightClaim.addSources([statedin],
+                            heightClaim.addSources([statedin, muisidref, refdate],
                                                    summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print("Adding height: " + dimensions['height'] + " cm")
 
@@ -572,7 +579,7 @@ for id in artworkIDs:
                             widthClaim.setTarget(width)
                             wdItem.addClaim(widthClaim,
                                             summary="Importing painting data from the Estonian Museum Portal MuIS")
-                            widthClaim.addSources([statedin],
+                            widthClaim.addSources([statedin, muisidref, refdate],
                                                   summary="Importing painting data from the Estonian Museum Portal MuIS")
                             print("Adding width: " + dimensions['width'] + " cm")
                     else:
