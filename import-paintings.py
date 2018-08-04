@@ -302,7 +302,7 @@ def findAuthorItems(authorList):
     return itemList
 
 
-def findinceptiondate(creation_events):
+def addinceptiondate(creation_events, wdItem):
     dateString = None
     for creation_event in creation_events:
         try:
@@ -312,10 +312,37 @@ def findinceptiondate(creation_events):
     if dateString is None:
         return None
     else:
-        # We only want to return a date if there's one and only one year in the result, otherwise skip
         dateList = dateString.split(' - ')
+        # If there's one and only one year in the result, just send that
         if all(x == dateList[0] for x in dateList) and validateDate(dateList[0]):
-            return dateList[0]
+            wikiInception = pywikibot.WbTime(year=dateList[0])
+            inceptionClaim = pywikibot.Claim(repo, "P571")
+            inceptionClaim.setTarget(wikiInception)
+            wdItem.addClaim(inceptionClaim,
+                            summary="Importing painting data from the Estonian Museum Portal MuIS")
+            inceptionClaim.addSources([statedin, muisidref, refdate],
+                                      summary="Importing painting data from the Estonian Museum Portal MuIS")
+            print("Adding inception date")
+        # If there's a year range, and the decade is the same, send decade + start and end of range as qualifiers
+        elif len(dateList) == 2 and dateList[0][:3] == dateList[1][:3] and dateList[0].isdigit() and dateList[1].isdigit():
+            wikiInception = pywikibot.WbTime(year=dateList[0], precision="decade")
+            inceptionClaim = pywikibot.Claim(repo, "P571")
+            inceptionClaim.setTarget(wikiInception)
+            wdItem.addClaim(inceptionClaim,
+                            summary="Importing painting data from the Estonian Museum Portal MuIS")
+            earliestQual = pywikibot.Claim(repo, "P1319")
+            earliestQual.setTarget(pywikibot.WbTime(year=dateList[0]))
+            inceptionClaim.addQualifier(earliestQual,
+                                     summary="Importing painting data from the Estonian Museum Portal MuIS")
+            latestQual = pywikibot.Claim(repo, "P1326")
+            latestQual.setTarget(pywikibot.WbTime(year=dateList[1]))
+            inceptionClaim.addQualifier(latestQual,
+                                     summary="Importing painting data from the Estonian Museum Portal MuIS")
+
+            inceptionClaim.addSources([statedin, muisidref, refdate],
+                                      summary="Importing painting data from the Estonian Museum Portal MuIS")
+            print("Adding inception date")
+        # Otherwise, it's too complicated and risks being bullcrap, so skip and do manually
         else:
             return None
 
@@ -379,10 +406,13 @@ refdate.setTarget(date)
 
 # We take the desired painting collections and extract the IDs of all the artworks in them
 print("Finding all IDs in collections")
-# 149 = Estonian Art Museum foreign paintings, 289 = EAM paintings, 402 = EAM Eric-Adamson collection
-collectionIDs = ["289"]#"149", "289", "402"]
+# 149 = Estonian Art Museum foreign paintings, 154 = EAM Mikkeli, 289 = EAM paintings, 402 = EAM Eric-Adamson collection
+# 1110 = Kristian Raud collection
+EKMcollectionIDs = ["149", "154", "289", "402", "1110"]
 # 419 = Tartu Art Museum watercolors, 442 = TAM paintings
-#collectionIDs = ["419", "442"]
+TKMcollectionIDs = ["419", "442"]
+
+collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs))
 
 artworkIDs = []
 
@@ -513,18 +543,7 @@ for id in artworkIDs:
 
             # We send the inception date
             if u'P571' not in wdItemClaims:
-                inception = findinceptiondate(creation_events)
-                if inception is not None:
-                    wikiInception = pywikibot.WbTime(year=inception)
-                    inceptionClaim = pywikibot.Claim(repo, "P571")
-                    inceptionClaim.setTarget(wikiInception)
-                    wdItem.addClaim(inceptionClaim,
-                                    summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    inceptionClaim.addSources([statedin, muisidref, refdate],
-                                              summary="Importing painting data from the Estonian Museum Portal MuIS")
-                    print("Adding inception date: " + inception)
-                else:
-                    print("Couldn't process the inception date")
+                addinceptiondate(creation_events, wdItem)
 
             # We extract the info about the "physical thing"
             composedOf = physical_thing.find('crm:P46_is_composed_of', physical_thing.nsmap)
