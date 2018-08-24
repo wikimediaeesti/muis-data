@@ -4,4 +4,4 @@ This tool imports data from the [Estonian Museums Information System (MuIS)](htt
 
 You will need a working [pywikibot](https://www.mediawiki.org/wiki/Manual:Pywikibot/Installation) installation to use the tool.
 
-Right now, the bot imports metadata for paintings in the collection of the [Tartu Art Museum](http://tartmus.ee/) and the [Estonian Art Museum](https://kunstimuuseum.ekm.ee/).
+Right now, the bot imports metadata for paintings in the collection of the [Tartu Art Museum](http://tartmus.ee/), the [Estonian Art Museum](https://kunstimuuseum.ekm.ee/), the Tartu City Museum and the Pärnu Museum.
