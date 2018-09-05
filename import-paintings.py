@@ -46,10 +46,17 @@ def findOwnerID(ownerID):
 
 
 def findCollection(physical_thing):
-    psP46i = physical_thing.find('crm:P46i_forms_part_of', physical_thing.nsmap)
-    collectionResource = psP46i.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-    collectionID = str(collectionResource).rsplit('/', 1)[-1]
-    return findCollectionID(collectionID)
+    collectionQIDs = []
+    psP46i = physical_thing.findall('crm:P46i_forms_part_of', physical_thing.nsmap)
+    for p46i in psP46i:
+        collectionResource = p46i.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+        collectionID = str(collectionResource).rsplit('/', 1)[-1]
+        # We only want collections, not other groupings (such as sets)
+        collectionType = str(collectionResource).rsplit('/', 1)[-2]
+        if collectionType == 'http://muis.ee/rdf/collection':
+            collectionQID = findCollectionID(collectionID)
+            collectionQIDs.append(collectionQID)
+    return collectionQIDs
 
 
 def findCollectionID(collectionID):
@@ -425,8 +432,12 @@ EKMcollectionIDs = ["149", "154", "289", "402", "1110"]
 TKMcollectionIDs = ["419", "442"]
 TartuLinMuscollectionIDs = ["518"]
 P2rnuMuscollectionIDs =  ["305"]
+V6rumaaMuscollectionIDs = ["750"]
+TartuUniArtMuscollectionIDs = ["1171"]
+TartuUniMuscollectionIDs = ["1187"]
+NarvaMuscollectionIDs = ["508"]
 
-collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs))
+collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs, V6rumaaMuscollectionIDs, TartuUniArtMuscollectionIDs, TartuUniMuscollectionIDs, NarvaMuscollectionIDs))
 
 artworkIDs = []
 
@@ -503,8 +514,13 @@ for id in artworkIDs:
                 # We set the collection, owner and catno based on the owner data
                 owner = findOwner(physical_thing)
                 ownerQ = pywikibot.ItemPage(repo, owner)
-                collection = findCollection(physical_thing)
-                collectionQ = pywikibot.ItemPage(repo, collection)
+                collections = findCollection(physical_thing)
+                # In almost all (all?) cases, there's just one actual collection. If not, skip for now
+                if len(collections) == 1:
+                    collection = collections[0]
+                    collectionQ = pywikibot.ItemPage(repo, collection)
+                else:
+                    collection = None
 
                 if u'P195' not in wdItemClaims:
                     if collection is not None:
