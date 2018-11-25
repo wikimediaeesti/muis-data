@@ -6,17 +6,17 @@ from pywikibot import pagegenerators as pg
 
 # Checks whether the entry for the artwork specifies it is a painting
 def findPaintingType(physical_thing):
-    typeXML = physical_thing.find('crm:P2_has_type', physical_thing.nsmap)
-    if typeXML is not None:
-        type = typeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
-        if type == 'http://opendata.muis.ee/thesaurus/203/13540':
-            # painting
-            return "Q3305213"
-        elif type == 'http://opendata.muis.ee/thesaurus/203/28549':
-            # watercolor
-            return "Q18761202"
-        else:
-            return None
+    typeXML_list = physical_thing.findall('crm:P2_has_type', physical_thing.nsmap)
+    if typeXML_list is not None:
+        for typeXML in typeXML_list:
+            type = typeXML.xpath('self::*//@rdf:resource', namespaces=physical_thing.nsmap)[0]
+            if type == 'http://opendata.muis.ee/thesaurus/203/13540':
+                # painting
+                return "Q3305213"
+            elif type == 'http://opendata.muis.ee/thesaurus/203/28549':
+                # watercolor
+                return "Q18761202"
+        return None
     else:
         return None
 
@@ -278,7 +278,7 @@ def findcreationevents(physical_thing):
                 # Type should be "k2sitski valmistamine" = "making by hand" = 61/11175 or "valmistamine" = making" = 61/11273 or "valmistamine/tekkimine" = 61/11145
                 acceptable_types = ['http://opendata.muis.ee/thesaurus/61/11175',
                                     'http://opendata.muis.ee/thesaurus/61/11273',
-                                    'https://www.muis.ee/rdf/thesaurus/61/11145']
+                                    'http://opendata.muis.ee/thesaurus/61/11145']
                 if eventType in acceptable_types:
                     creation_events.append(eventSection)
         except requests.exceptions.RequestException as e:
