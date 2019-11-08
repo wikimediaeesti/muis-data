@@ -53,7 +53,7 @@ def findCollection(physical_thing):
         collectionID = str(collectionResource).rsplit('/', 1)[-1]
         # We only want collections, not other groupings (such as sets)
         collectionType = str(collectionResource).rsplit('/', 1)[-2]
-        if collectionType == 'http://muis.ee/rdf/collection':
+        if collectionType == 'http://www.muis.ee/rdf/collection':
             collectionQID = findCollectionID(collectionID)
             collectionQIDs.append(collectionQID)
     return collectionQIDs
@@ -84,8 +84,9 @@ def findtechnique(physical_thing):
 
 def decodeTechnique(technique):
     switcher = {
-        # 6li = oil
+        # 6li / 6liv2rvimine = oil
         'http://opendata.muis.ee/thesaurus/107/5329': "Q296955",
+        'http://opendata.muis.ee/thesaurus/107/5290': "Q296955",
         'http://opendata.muis.ee/thesaurus/107/33126': "Q296955",
         # segatehnika = "mixed technique" doesn't seem to be a good match for WD "material"
         'http://opendata.muis.ee/thesaurus/107/5328': None,
@@ -94,6 +95,7 @@ def decodeTechnique(technique):
         'http://opendata.muis.ee/thesaurus/107/5259': "Q175166",
         # guass
         'http://opendata.muis.ee/thesaurus/107/5539': "Q204330",
+        'http://opendata.muis.ee/thesaurus/107/33123': "Q204330",
         # akryyl
         'http://opendata.muis.ee/thesaurus/107/5324': "Q207849",
         'http://opendata.muis.ee/thesaurus/107/33127': "Q207849",
@@ -137,7 +139,9 @@ def decodeTechnique(technique):
         # viltpliiats = marker
         'http://opendata.muis.ee/thesaurus/107/30014': "Q493615",
         # pastell = pastel
+        'http://opendata.muis.ee/thesaurus/107/5540': "Q189085",
         'http://opendata.muis.ee/thesaurus/107/29685': "Q189085",
+        'http://opendata.muis.ee/thesaurus/107/33124': "Q189085",
         # v2rviline pliiats = colored pencil
         'http://opendata.muis.ee/thesaurus/107/26072': "Q1783255",
         # v2rvipliiatsijoonistus = colored pencil drawing = colored pencil
@@ -188,6 +192,7 @@ def decodeMaterial(material):
         'http://opendata.muis.ee/thesaurus/112/29672': "Q1808397",
         # kartong = cardboard
         'http://opendata.muis.ee/thesaurus/112/2203': "Q389782",
+        'http://opendata.muis.ee/thesaurus/112/32527': "Q389782",
         # papp = cardboard
         'http://opendata.muis.ee/thesaurus/112/2362': "Q389782",
         'http://opendata.muis.ee/thesaurus/112/32528': "Q389782",
@@ -200,6 +205,7 @@ def decodeMaterial(material):
         'http://opendata.muis.ee/thesaurus/112/2072': "Q244680",
         # 6li = oil
         'http://opendata.muis.ee/thesaurus/112/2076': "Q296955",
+        'http://opendata.muis.ee/thesaurus/112/2419': "Q296955",
         # <anorgaanilise/orgaanilise aine kombinatsioonid> doesn't fit anything really
         'http://opendata.muis.ee/thesaurus/112/2086': None,
         # klaas = glass
@@ -219,7 +225,16 @@ def decodeMaterial(material):
         # penoplast = vahtpolystyreen = extruded polystyrene
         'http://opendata.muis.ee/thesaurus/112/30155': "Q46998058",
         # kips = gypsum = gypsum plaster
-        'http://opendata.muis.ee/thesaurus/112/32615': "Q25816410"
+        'http://opendata.muis.ee/thesaurus/112/32615': "Q25816410",
+        'http://opendata.muis.ee/thesaurus/112/1972': "Q25816410",
+        # guass
+        'http://opendata.muis.ee/thesaurus/112/2422': "Q204330",
+        # akryyl
+        'http://opendata.muis.ee/thesaurus/112/2431': "Q207849",
+        # kriit = chalk
+        'http://opendata.muis.ee/thesaurus/112/1944': "Q183670",
+        # akvarell
+        'http://opendata.muis.ee/thesaurus/112/32725': "Q22915256",
     }
     return switcher.get(material, None)
 
@@ -436,8 +451,13 @@ V6rumaaMuscollectionIDs = ["750"]
 TartuUniArtMuscollectionIDs = ["1171"]
 TartuUniMuscollectionIDs = ["1187"]
 NarvaMuscollectionIDs = ["508"]
+J2rvamaaMuscollectionIDs = ["389"]
+# 352 = Music Museum, 552 = History Museum
+HistoryMuseumcollectionIDs = ["352", "552"]
+# 633 = ERM art col, 1590 = Tartumaa Museum art col
+NationalMuseumcollectionIDs = ["633", "1590"]
 
-collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs, V6rumaaMuscollectionIDs, TartuUniArtMuscollectionIDs, TartuUniMuscollectionIDs, NarvaMuscollectionIDs))
+collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs, V6rumaaMuscollectionIDs, TartuUniArtMuscollectionIDs, TartuUniMuscollectionIDs, NarvaMuscollectionIDs, J2rvamaaMuscollectionIDs, HistoryMuseumcollectionIDs, NationalMuseumcollectionIDs))
 
 artworkIDs = []
 
