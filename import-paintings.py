@@ -456,8 +456,14 @@ J2rvamaaMuscollectionIDs = ["389"]
 HistoryMuseumcollectionIDs = ["352", "552"]
 # 633 = ERM art col, 1590 = Tartumaa Museum art col
 NationalMuseumcollectionIDs = ["633", "1590"]
+ViljandiMuseumcollectionIDs = ["666"]
+MaritimeMuseumcollectionIDs = ["280"]
+VirumaaMuseumscollectionIDs = ["685"]
+HaapsaluMuseumscollectionIDs = ["737"]
+TallinnCityMuseumcollectionIDs = ["877"]
+SaaremaaMuseumcollectionIDs = ["472"]
 
-collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs, V6rumaaMuscollectionIDs, TartuUniArtMuscollectionIDs, TartuUniMuscollectionIDs, NarvaMuscollectionIDs, J2rvamaaMuscollectionIDs, HistoryMuseumcollectionIDs, NationalMuseumcollectionIDs))
+collectionIDs = list(set().union(EKMcollectionIDs, TKMcollectionIDs, TartuLinMuscollectionIDs, P2rnuMuscollectionIDs, V6rumaaMuscollectionIDs, TartuUniArtMuscollectionIDs, TartuUniMuscollectionIDs, NarvaMuscollectionIDs, J2rvamaaMuscollectionIDs, HistoryMuseumcollectionIDs, NationalMuseumcollectionIDs, ViljandiMuseumcollectionIDs, MaritimeMuseumcollectionIDs, VirumaaMuseumscollectionIDs, HaapsaluMuseumscollectionIDs, TallinnCityMuseumcollectionIDs, SaaremaaMuseumcollectionIDs))
 
 artworkIDs = []
 
